@@ -16,18 +16,43 @@
  */
 
 /* Parse a ChordPro template */
-function parseChordPro(template) {
+function parseChordPro(template, transpose) {
+	if( typeof transpose == "undefined" ) {
+		transpose = false;
+	}
 	var chordregex= /\[([^\]]*)\]/;
 	var inword    = /[a-z]$/;
 	var buffer    = [];
 	var chords    = [];
 	var last_was_lyric = false;
-	if (!template) return;
+	var transpose_chord = function( chord, trans ) {
+		var notes = ['A', 'A#', 'B', 'C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#'];
+		var regex = /^([A-Z][b#]*).*/;
+		var modulo = function(n, m) {
+				return ((n % m) + m) % m;
+		}
+		return chord.replace( regex, function( $1 ) {
+			if( $1.length > 1 && $1[1] == 'b' ) {
+				if( $1[0] == 'A' ) {
+					$1 = "G#";
+				} else {
+					$1 = String.fromCharCode($1[0].charCodeAt() - 1) + '#';
+				}
+			}
+			var index = notes.indexOf( $1 );
+			if( index != -1 ) {
+				index = modulo( ( index + trans ), notes.length );
+				return notes[index];
+			}
+			return 'XX';
+		});
+	}
+	if (!template) return "";
 
 	template.split("\n").forEach(function(line, linenum) {
 		/* Comment, ignore */
 		if (line.match(/^#/)) {
-			return;
+			return "";
 		}
 		/* Chord line */
 		if (line.match(chordregex)) {
@@ -73,6 +98,9 @@ function parseChordPro(template) {
 				} else {
 					/* Chords */
 					chord = word.replace(/[[]]/, "");
+					if(transpose) {
+						chord = transpose_chord(chord, transpose);
+					}
 					chordlen = chord.length;
 					chords = chords + '<span class="chord" data-original-val="' + chord + '">' + chord + '</span>';
 				}
