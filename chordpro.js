@@ -27,7 +27,7 @@ function parseChordPro(template, transpose) {
 	var last_was_lyric = false;
 	var transpose_chord = function( chord, trans ) {
 		var notes = ['A', 'A#', 'B', 'C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#'];
-		var regex = /^([A-Z][b#]*).*/;
+		var regex = /([A-Z][b#]?)/g;
 		var modulo = function(n, m) {
 				return ((n % m) + m) % m;
 		}
@@ -98,7 +98,7 @@ function parseChordPro(template, transpose) {
 				} else {
 					/* Chords */
 					chord = word.replace(/[[]]/, "");
-					if(transpose) {
+					if(transpose !== false) {
 						chord = transpose_chord(chord, transpose);
 					}
 					chordlen = chord.length;
